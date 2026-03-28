@@ -2,42 +2,57 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-df = pd.read_csv("netflix_titles.csv")
-df["type"].value_counts().plot(kind="bar")
+def load_data():
+    df = pd.read_csv("netflix_titles.csv")
+    df = df.dropna()
+    return df
 
-plt.title("Movies vs TV Shows")
-plt.xlabel("Type")
-plt.ylabel("Count")
-plt.show()
-# Türleri ayır
-genres = df["listed_in"].str.split(", ")
 
-# Listeyi düzleştir
-all_genres = []
-for g in genres:
-    all_genres.extend(g)
+def plot_type_distribution(df):
+    plt.figure()
+    df["type"].value_counts().plot(kind="bar")
+    plt.title("Movies vs TV Shows")
+    plt.xlabel("Type")
+    plt.ylabel("Count")
+    plt.show()
 
-genre_series = pd.Series(all_genres)
 
-# En popüler türler
-genre_series.value_counts().head(10).plot(kind="bar")
+def plot_top_genres(df):
+    genres = df["listed_in"].str.split(", ")
+    
+    all_genres = []
+    for g in genres:
+        all_genres.extend(g)
 
-plt.title("Top Genres")
-plt.xlabel("Genre")
-plt.ylabel("Count")
-plt.show()
+    genre_series = pd.Series(all_genres)
 
-df["release_year"].value_counts().sort_index().plot()
+    plt.figure()
+    genre_series.value_counts().head(10).plot(kind="bar")
+    plt.title("Top Genres")
+    plt.xlabel("Genre")
+    plt.ylabel("Count")
+    plt.show()
 
-plt.title("Content Release Over Years")
-plt.xlabel("Year")
-plt.ylabel("Count")
-plt.show()
 
-print(df.head())
-# Eksik verileri kontrol et
-print(df.isnull().sum())
+def plot_release_trend(df):
+    plt.figure()
+    df["release_year"].value_counts().sort_index().plot()
+    plt.title("Content Release Over Years")
+    plt.xlabel("Year")
+    plt.ylabel("Count")
+    plt.show()
 
-# Eksik değerleri doldur veya sil
-df = df.dropna()
-print(df["type"].value_counts())
+
+def main():
+    df = load_data()
+
+    print(df.head())
+    print(df.isnull().sum())
+
+    plot_type_distribution(df)
+    plot_top_genres(df)
+    plot_release_trend(df)
+
+
+if __name__ == "__main__":
+    main()
