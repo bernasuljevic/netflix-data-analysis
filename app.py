@@ -1,78 +1,84 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import streamlit as st
 
-# Stil ayarı
 sns.set(style="whitegrid")
 
+# Sayfa ayarı
+st.set_page_config(layout="wide")
 
+# Başlık
+st.title("📊 Netflix Data Analysis Dashboard")
+
+
+@st.cache_data
 def load_data():
     df = pd.read_csv("netflix_titles.csv")
     df = df.dropna()
     return df
 
 
-def plot_type_distribution(df):
-    plt.figure(figsize=(6, 4))
+df = load_data()
 
-    ax = sns.countplot(x="type", data=df, palette="pastel")
+# 🎯 FİLTRELER
+st.sidebar.header("Filters")
 
-    plt.title("Distribution of Movies vs TV Shows", fontsize=14)
-    plt.xlabel("Type")
-    plt.ylabel("Count")
+selected_type = st.sidebar.multiselect(
+    "Select Type",
+    options=df["type"].unique(),
+    default=df["type"].unique()
+)
 
-    # Üstüne sayı yaz
-    for p in ax.patches:
-        ax.annotate(f'{int(p.get_height())}',
-                    (p.get_x() + p.get_width() / 2., p.get_height()),
-                    ha='center', va='bottom')
+year_range = st.sidebar.slider(
+    "Select Release Year Range",
+    int(df["release_year"].min()),
+    int(df["release_year"].max()),
+    (2000, 2020)
+)
 
-    plt.show()
+# Filtre uygula
+filtered_df = df[
+    (df["type"].isin(selected_type)) &
+    (df["release_year"].between(year_range[0], year_range[1]))
+]
 
+# 🔹 1. Movies vs TV Shows
+st.subheader("🎬 Movies vs TV Shows")
 
-def plot_top_genres(df):
-    genres = df["listed_in"].str.split(", ")
+fig1, ax1 = plt.subplots(figsize=(8, 5))
+sns.countplot(x="type", data=filtered_df, palette="pastel", ax=ax1)
 
-    all_genres = []
-    for g in genres:
-        all_genres.extend(g)
+for p in ax1.patches:
+    ax1.annotate(f'{int(p.get_height())}',
+                 (p.get_x() + p.get_width()/2., p.get_height()),
+                 ha='center', va='bottom')
 
-    genre_series = pd.Series(all_genres)
+st.pyplot(fig1)
 
-    top_genres = genre_series.value_counts().head(10)
+# 🔹 2. Top Genres
+st.subheader("🎭 Top Genres")
 
-    plt.figure(figsize=(10, 5))
+genres = filtered_df["listed_in"].str.split(", ")
+all_genres = []
 
-    sns.barplot(x=top_genres.values, y=top_genres.index, palette="coolwarm")
+for g in genres:
+    all_genres.extend(g)
 
-    plt.title("Top 10 Genres on Netflix", fontsize=14)
-    plt.xlabel("Count")
-    plt.ylabel("Genre")
+genre_series = pd.Series(all_genres)
+top_genres = genre_series.value_counts().head(10)
 
-    plt.show()
+fig2, ax2 = plt.subplots(figsize=(10, 6))
+sns.barplot(x=top_genres.values, y=top_genres.index, palette="coolwarm", ax=ax2)
 
+st.pyplot(fig2)
 
-def plot_release_trend(df):
-    release_counts = df["release_year"].value_counts().sort_index()
+# 🔹 3. Release Trend
+st.subheader("📈 Release Trend")
 
-    plt.figure(figsize=(10, 5))
+release_counts = filtered_df["release_year"].value_counts().sort_index()
 
-    sns.lineplot(x=release_counts.index, y=release_counts.values)
+fig3, ax3 = plt.subplots(figsize=(10, 5))
+sns.lineplot(x=release_counts.index, y=release_counts.values, ax=ax3)
 
-    plt.title("Content Release Trend Over Years", fontsize=14)
-    plt.xlabel("Year")
-    plt.ylabel("Number of Titles")
-
-    plt.show()
-
-
-def main():
-    df = load_data()
-
-    plot_type_distribution(df)
-    plot_top_genres(df)
-    plot_release_trend(df)
-
-
-if __name__ == "__main__":
-    main()
+st.pyplot(fig3)
