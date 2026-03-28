@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
+import os
 
 sns.set(style="whitegrid")
 
@@ -14,7 +15,10 @@ st.title("📊 Netflix Data Analysis Dashboard")
 
 @st.cache_data
 def load_data():
-    df = pd.read_csv("netflix_titles.csv")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(BASE_DIR, "netflix_titles.csv")
+
+    df = pd.read_csv(file_path)
     df = df.dropna()
     return df
 
@@ -37,11 +41,19 @@ year_range = st.sidebar.slider(
     (2000, 2025)
 )
 
+# 🔍 SEARCH (ekledim sana 🔥)
+search_title = st.sidebar.text_input("Search Title")
+
 # Filtre uygula
 filtered_df = df[
     (df["type"].isin(selected_type)) &
     (df["release_year"].between(year_range[0], year_range[1]))
 ]
+
+if search_title:
+    filtered_df = filtered_df[
+        filtered_df["title"].str.contains(search_title, case=False)
+    ]
 
 # Eğer veri yoksa
 if filtered_df.empty:
@@ -68,10 +80,6 @@ st.subheader("🎬 Movies vs TV Shows")
 
 fig1, ax1 = plt.subplots(figsize=(8, 5))
 sns.countplot(x="type", data=filtered_df, palette="pastel", ax=ax1)
-
-ax1.set_title("Movies vs TV Shows")
-ax1.set_xlabel("Type")
-ax1.set_ylabel("Count")
 
 st.pyplot(fig1)
 
