@@ -82,3 +82,20 @@ fig3, ax3 = plt.subplots(figsize=(10, 5))
 sns.lineplot(x=release_counts.index, y=release_counts.values, ax=ax3)
 
 st.pyplot(fig3)
+# 🔹 4. Top Countries
+st.subheader("🌍 Top Countries Producing Content")
+
+# country sütununu parçala
+countries = filtered_df["country"].str.split(", ")
+all_countries = []
+
+for c in countries:
+    all_countries.extend(c)
+
+country_series = pd.Series(all_countries)
+top_countries = country_series.value_counts().head(10)
+
+fig4, ax4 = plt.subplots(figsize=(10, 6))
+sns.barplot(x=top_countries.values, y=top_countries.index, palette="viridis", ax=ax4)
+
+st.pyplot(fig4)
