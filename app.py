@@ -34,7 +34,7 @@ year_range = st.sidebar.slider(
     "Select Release Year Range",
     int(df["release_year"].min()),
     int(df["release_year"].max()),
-    (2000, 2020)
+    (2000, 2025)
 )
 
 # Filtre uygula
@@ -43,16 +43,35 @@ filtered_df = df[
     (df["release_year"].between(year_range[0], year_range[1]))
 ]
 
+# Eğer veri yoksa
+if filtered_df.empty:
+    st.warning("No data available for selected filters.")
+    st.stop()
+
+# 🔹 METRICS
+st.markdown("## 📊 Overview")
+
+total_titles = len(filtered_df)
+total_movies = len(filtered_df[filtered_df["type"] == "Movie"])
+total_tv = len(filtered_df[filtered_df["type"] == "TV Show"])
+avg_year = int(filtered_df["release_year"].mean())
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("Total Titles", total_titles)
+col2.metric("Movies", total_movies)
+col3.metric("TV Shows", total_tv)
+col4.metric("Avg Release Year", avg_year)
+
 # 🔹 1. Movies vs TV Shows
 st.subheader("🎬 Movies vs TV Shows")
 
 fig1, ax1 = plt.subplots(figsize=(8, 5))
 sns.countplot(x="type", data=filtered_df, palette="pastel", ax=ax1)
 
-for p in ax1.patches:
-    ax1.annotate(f'{int(p.get_height())}',
-                 (p.get_x() + p.get_width()/2., p.get_height()),
-                 ha='center', va='bottom')
+ax1.set_title("Movies vs TV Shows")
+ax1.set_xlabel("Type")
+ax1.set_ylabel("Count")
 
 st.pyplot(fig1)
 
@@ -82,10 +101,10 @@ fig3, ax3 = plt.subplots(figsize=(10, 5))
 sns.lineplot(x=release_counts.index, y=release_counts.values, ax=ax3)
 
 st.pyplot(fig3)
+
 # 🔹 4. Top Countries
 st.subheader("🌍 Top Countries Producing Content")
 
-# country sütununu parçala
 countries = filtered_df["country"].str.split(", ")
 all_countries = []
 
